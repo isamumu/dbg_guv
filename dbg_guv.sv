@@ -1,12 +1,6 @@
 `timescale 1ns / 1ps
 
 `include "axis_governor.v"
-`include "dbg_guv_width_adapter.v"
-`include "tkeep_to_len.v"
-`endif
-
-`define SAFE_ID_WIDTH (ID_WIDTH < 1 ? 1 : ID_WIDTH)
-`define SAFE_DEST_WIDTH (DEST_WIDTH < 1 ? 1 : DEST_WIDTH)
 
 module dbg_guv # (
     // will move this to dbg_guv module later
@@ -21,89 +15,88 @@ module dbg_guv # (
     output wire cmd_in_TREADY,
 
     //Input AXI Stream rdata.
-    input wire [DATA_WIDTH-1:0] din_TDATA_rdata;
-    input wire din_TLAST_rdata;
-    input wire [DATA_WIDTH/8-1:0] din_TKEEP_rdata;
-    input wire [DEST_WIDTH -1:0] din_TDEST_rdata;
-    input wire [ID_WIDTH -1:0] din_TID_rdata;
-    input wire din_TVALID_rdata;
-    input wire din_TREADY_rdata;
+    input wire [DATA_WIDTH-1:0] din_TDATA_rdata,
+    input wire din_TLAST_rdata,
+    input wire [DATA_WIDTH/8-1:0] din_TKEEP_rdata,
+    input wire [DEST_WIDTH -1:0] din_TDEST_rdata,
+    input wire [ID_WIDTH -1:0] din_TID_rdata,
+    input wire din_TVALID_rdata,
+    input wire din_TREADY_rdata,
 
     //Input AXI Stream wdata.
-    input wire [DATA_WIDTH-1:0] din_TDATA_wdata;
-    input wire din_TLAST_wdata;
-    input wire [DATA_WIDTH/8-1:0] din_TKEEP_wdata;
-    input wire [DEST_WIDTH -1:0] din_TDEST_wdata;
-    input wire [ID_WIDTH -1:0] din_TID_wdata;
-    input wire din_TVALID_wdata;
-    input wire din_TREADY_wdata;
+    input wire [DATA_WIDTH-1:0] din_TDATA_wdata,
+    input wire din_TLAST_wdata,
+    input wire [DATA_WIDTH/8-1:0] din_TKEEP_wdata,
+    input wire [DEST_WIDTH -1:0] din_TDEST_wdata,
+    input wire [ID_WIDTH -1:0] din_TID_wdata,
+    input wire din_TVALID_wdata,
+    input wire din_TREADY_wdata,
 
     //Input AXI Stream raddr.
-    input wire [DATA_WIDTH-1:0] din_TDATA_raddr;
-    input wire din_TLAST_raddr;
-    input wire [DATA_WIDTH/8-1:0] din_TKEEP_raddr;
-    input wire [DEST_WIDTH -1:0] din_TDEST_raddr;
-    input wire [ID_WIDTH -1:0] din_TID_raddr;
-    input wire din_TVALID_raddr;
-    input wire din_TREADY_raddr;
+    input wire [DATA_WIDTH-1:0] din_TDATA_raddr,
+    input wire din_TLAST_raddr,
+    input wire [DATA_WIDTH/8-1:0] din_TKEEP_raddr,
+    input wire [DEST_WIDTH -1:0] din_TDEST_raddr,
+    input wire [ID_WIDTH -1:0] din_TID_raddr,
+    input wire din_TVALID_raddr,
+    input wire din_TREADY_raddr,
 
     //Input AXI Stream awaddr.
-    input wire [DATA_WIDTH-1:0] din_TDATA_awaddr;
-    input wire din_TLAST_awaddr;
-    input wire [DATA_WIDTH/8-1:0] din_TKEEP_awaddr;
-    input wire [DEST_WIDTH -1:0] din_TDEST_awaddr;
-    input wire [ID_WIDTH -1:0] din_TID_awaddr;
-    input wire din_TVALID_awaddr;
-    input wire din_TREADY_awaddr;
+    input wire [DATA_WIDTH-1:0] din_TDATA_awaddr,
+    input wire din_TLAST_awaddr,
+    input wire [DATA_WIDTH/8-1:0] din_TKEEP_awaddr,
+    input wire [DEST_WIDTH -1:0] din_TDEST_awaddr,
+    input wire [ID_WIDTH -1:0] din_TID_awaddr,
+    input wire din_TVALID_awaddr,
+    input wire din_TREADY_awaddr,
 
     //Input AXI Stream resp.
-    input wire [DATA_WIDTH-1:0] din_TDATA_resp;
-    input wire din_TLAST_resp;
-    input wire [DATA_WIDTH/8-1:0] din_TKEEP_resp;
-    input wire [DEST_WIDTH -1:0] din_TDEST_resp;
-    input wire [ID_WIDTH -1:0] din_TID_resp;
-    input wire din_TVALID_resp;
-    input wire din_TREADY_resp;
+    input wire [DATA_WIDTH-1:0] din_TDATA_resp,
+    input wire din_TLAST_resp,
+    input wire [DATA_WIDTH/8-1:0] din_TKEEP_resp,
+    input wire [DEST_WIDTH -1:0] din_TDEST_resp,
+    input wire [ID_WIDTH -1:0] din_TID_resp,
+    input wire din_TVALID_resp,
+    input wire din_TREADY_resp,
     
     //Output AXI Stream rdata.
-    output wire [DATA_WIDTH-1:0] dout_TDATA_rdata;
-    output wire [DATA_WIDTH/8-1:0]dout_TKEEP_rdata;
-    output wire [DEST_WIDTH -1:0] dout_TDEST_rdata;
-    output wire [ID_WIDTH -1:0] dout_TID_rdata;
-    output wire dout_TVALID_rdata;
-    output wire dout_TREAD_rdata;
+    output wire [DATA_WIDTH-1:0] dout_TDATA_rdata,
+    output wire [DATA_WIDTH/8-1:0]dout_TKEEP_rdata,
+    output wire [DEST_WIDTH -1:0] dout_TDEST_rdata,
+    output wire [ID_WIDTH -1:0] dout_TID_rdata,
+    output wire dout_TVALID_rdata,
+    output wire dout_TREADY_rdata,
 
     //Output AXI Stream wdata.
-    output wire [DATA_WIDTH-1:0] dout_TDATA_wdata;
-    output wire [DATA_WIDTH/8-1:0]dout_TKEEP_wdata;
-    output wire [DEST_WIDTH -1:0] dout_TDEST_wdata;
-    output wire [ID_WIDTH -1:0] dout_TID_wdata;
-    output wire dout_TVALID_wdata;
-    output wire dout_TREADY_wdata;
-
+    output wire [DATA_WIDTH-1:0] dout_TDATA_wdata,
+    output wire [DATA_WIDTH/8-1:0]dout_TKEEP_wdata,
+    output wire [DEST_WIDTH -1:0] dout_TDEST_wdata,
+    output wire [ID_WIDTH -1:0] dout_TID_wdata,
+    output wire dout_TVALID_wdata,
+    output wire dout_TREADY_wdata,
     //Output AXI Stream raddr.
-    output wire [DATA_WIDTH-1:0] dout_TDATA_raddr;
-    output wire [DATA_WIDTH/8-1:0]dout_TKEEP_raddr;
-    output wire [DEST_WIDTH -1:0] dout_TDEST_raddr;
-    output wire [ID_WIDTH -1:0] dout_TID_raddr;
-    output wire dout_TVALID_raddr;
-    output wire dout_TREADY_raddr;
+    output wire [DATA_WIDTH-1:0] dout_TDATA_raddr,
+    output wire [DATA_WIDTH/8-1:0]dout_TKEEP_raddr,
+    output wire [DEST_WIDTH -1:0] dout_TDEST_raddr,
+    output wire [ID_WIDTH -1:0] dout_TID_raddr,
+    output wire dout_TVALID_raddr,
+    output wire dout_TREADY_raddr,
 
     //Output AXI Stream awaddr.
-    output wire [DATA_WIDTH-1:0] dout_TDATA_awaddr;
-    output wire [DATA_WIDTH/8-1:0]dout_TKEEP_awaddr;
-    output wire [DEST_WIDTH -1:0] dout_TDEST_awaddr;
-    output wire [ID_WIDTH -1:0] dout_TID_awaddr;
-    output wire dout_TVALID_awaddr;
-    output wire dout_TREADY_awaddr;
+    output wire [DATA_WIDTH-1:0] dout_TDATA_awaddr,
+    output wire [DATA_WIDTH/8-1:0]dout_TKEEP_awaddr,
+    output wire [DEST_WIDTH -1:0] dout_TDEST_awaddr,
+    output wire [ID_WIDTH -1:0] dout_TID_awaddr,
+    output wire dout_TVALID_awaddr,
+    output wire dout_TREADY_awaddr,
 
     //Output AXI Stream resp.
-    output wire [DATA_WIDTH-1:0] dout_TDATA_resp;
-    output wire [DATA_WIDTH/8-1:0]dout_TKEEP_resp;
-    output wire [DEST_WIDTH -1:0] dout_TDEST_resp;
-    output wire [ID_WIDTH -1:0] dout_TID_resp;
-    output wire dout_TVALID_resp;
-    output wire dout_TREADY_resp;
+    output wire [DATA_WIDTH-1:0] dout_TDATA_resp,
+    output wire [DATA_WIDTH/8-1:0]dout_TKEEP_resp,
+    output wire [DEST_WIDTH -1:0] dout_TDEST_resp,
+    output wire [ID_WIDTH -1:0] dout_TID_resp,
+    output wire dout_TVALID_resp,
+    output wire dout_TREADY_resp
 );
 
     // CONTROLPATH signals 

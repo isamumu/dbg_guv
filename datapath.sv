@@ -3,7 +3,6 @@
 `include "axis_governor.v"
 `include "dbg_guv_width_adapter.v"
 `include "tkeep_to_len.v"
-`endif
 
 
 `define SAFE_ID_WIDTH (ID_WIDTH < 1 ? 1 : ID_WIDTH)
@@ -121,7 +120,7 @@ module datapath # (
     output wire w_done_DONE_DROP,
     output wire w_done_DONE_LOG,
     output wire w_done_DONE_INJECT,
-    output wire w_done_DONE_PAUSE,
+    output wire w_done_DONE_PAUSE
     
 );   
 

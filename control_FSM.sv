@@ -1,9 +1,7 @@
 `timescale 1ns / 1ps
 
 `include "axis_governor.v"
-`include "dbg_guv_width_adapter.v"
-`include "tkeep_to_len.v"
-`endif
+
 
 
 //////////////////////////////////////////////////////
