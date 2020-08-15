@@ -1,12 +1,11 @@
 `timescale 1ns / 1ps
 
 `include "axis_governor.v"
-`include "dbg_guv_width_adapter.v"
-`include "tkeep_to_len.v"
-
 
 `define SAFE_ID_WIDTH (ID_WIDTH < 1 ? 1 : ID_WIDTH)
 `define SAFE_DEST_WIDTH (DEST_WIDTH < 1 ? 1 : DEST_WIDTH)
+
+// direction of wires: input (going into the axis guv) and output (going out of axis guv)
 
 module datapath # (
     // will move this to dbg_guv module later
@@ -23,92 +22,61 @@ module datapath # (
     input wire master_drop_enable_wdata,
 
     //Input command stream
-    input wire [28:0] cmd_in_TDATA,
+    input wire [31:0] cmd_in_TDATA,
 
     //Input AXI Stream rdata.
     input wire [DATA_WIDTH-1:0] din_TDATA_rdata,
-    input wire din_TLAST_rdata,
-    input wire [DATA_WIDTH/8-1:0] din_TKEEP_rdata,
     input wire [DEST_WIDTH -1:0] din_TDEST_rdata,
-    input wire [ID_WIDTH -1:0] din_TID_rdata,
     input wire din_TVALID_rdata,
-    input wire din_TREADY_rdata,
+    output wire din_TREADY_rdata,
 
     //Input AXI Stream wdata.
-    input wire [DATA_WIDTH-1:0] din_TDATA_wdata,
-    input wire din_TLAST_wdata,
-    input wire [DATA_WIDTH/8-1:0] din_TKEEP_wdata,
-    input wire [DEST_WIDTH -1:0] din_TDEST_wdata,
-    input wire [ID_WIDTH -1:0] din_TID_wdata,
-    input wire din_TVALID_wdata,
+    output wire [DATA_WIDTH-1:0] din_TDATA_wdata,
+    output wire din_TVALID_wdata,
     input wire din_TREADY_wdata,
 
     //Input AXI Stream raddr.
-    input wire [DATA_WIDTH-1:0] din_TDATA_raddr,
-    input wire din_TLAST_raddr,
-    input wire [DATA_WIDTH/8-1:0] din_TKEEP_raddr,
-    input wire [DEST_WIDTH -1:0] din_TDEST_raddr,
-    input wire [ID_WIDTH -1:0] din_TID_raddr,
-    input wire din_TVALID_raddr,
+    output wire [DATA_WIDTH-1:0] din_TDATA_raddr,
+    output wire din_TVALID_raddr,
     input wire din_TREADY_raddr,
 
     //Input AXI Stream awaddr.
-    input wire [DATA_WIDTH-1:0] din_TDATA_awaddr,
-    input wire din_TLAST_awaddr,
-    input wire [DATA_WIDTH/8-1:0] din_TKEEP_awaddr,
-    input wire [DEST_WIDTH -1:0] din_TDEST_awaddr,
-    input wire [ID_WIDTH -1:0] din_TID_awaddr,
-    input wire din_TVALID_awaddr,
+    output wire [DATA_WIDTH-1:0] din_TDATA_awaddr,
+    output wire din_TVALID_awaddr,
     input wire din_TREADY_awaddr,
 
     //Input AXI Stream resp.
     input wire [DATA_WIDTH-1:0] din_TDATA_resp,
-    input wire din_TLAST_resp,
-    input wire [DATA_WIDTH/8-1:0] din_TKEEP_resp,
-    input wire [DEST_WIDTH -1:0] din_TDEST_resp,
-    input wire [ID_WIDTH -1:0] din_TID_resp,
     input wire din_TVALID_resp,
-    input wire din_TREADY_resp,
-    
+    output wire din_TREADY_resp,
+
+    /////////////////////////////////////////////////////////////////////////////////
+
     //Output AXI Stream rdata.
     output wire [DATA_WIDTH-1:0] dout_TDATA_rdata,
-    output wire [DATA_WIDTH/8-1:0]dout_TKEEP_rdata,
     output wire [DEST_WIDTH -1:0] dout_TDEST_rdata,
-    output wire [ID_WIDTH -1:0] dout_TID_rdata,
     output wire dout_TVALID_rdata,
-    output wire dout_TREADY_rdata,
+    input wire dout_TREADY_rdata,
 
     //Output AXI Stream wdata.
-    output wire [DATA_WIDTH-1:0] dout_TDATA_wdata,
-    output wire [DATA_WIDTH/8-1:0]dout_TKEEP_wdata,
-    output wire [DEST_WIDTH -1:0] dout_TDEST_wdata,
-    output wire [ID_WIDTH -1:0] dout_TID_wdata,
-    output wire dout_TVALID_wdata,
+    input wire [DATA_WIDTH-1:0] dout_TDATA_wdata,
+    input wire dout_TVALID_wdata,
     output wire dout_TREADY_wdata,
 
     //Output AXI Stream raddr.
-    output wire [DATA_WIDTH-1:0] dout_TDATA_raddr,
-    output wire [DATA_WIDTH/8-1:0]dout_TKEEP_raddr,
-    output wire [DEST_WIDTH -1:0] dout_TDEST_raddr,
-    output wire [ID_WIDTH -1:0] dout_TID_raddr,
-    output wire dout_TVALID_raddr,
+    input wire [DATA_WIDTH-1:0] dout_TDATA_raddr,
+    input wire dout_TVALID_raddr,
     output wire dout_TREADY_raddr,
 
     //Output AXI Stream awaddr.
-    output wire [DATA_WIDTH-1:0] dout_TDATA_awaddr,
-    output wire [DATA_WIDTH/8-1:0]dout_TKEEP_awaddr,
-    output wire [DEST_WIDTH -1:0] dout_TDEST_awaddr,
-    output wire [ID_WIDTH -1:0] dout_TID_awaddr,
-    output wire dout_TVALID_awaddr,
+    input wire [DATA_WIDTH-1:0] dout_TDATA_awaddr,
+    input wire dout_TVALID_awaddr,
     output wire dout_TREADY_awaddr,
 
     //Output AXI Stream resp.
     output wire [DATA_WIDTH-1:0] dout_TDATA_resp,
-    output wire [DATA_WIDTH/8-1:0]dout_TKEEP_resp,
-    output wire [DEST_WIDTH -1:0] dout_TDEST_resp,
-    output wire [ID_WIDTH -1:0] dout_TID_resp,
     output wire dout_TVALID_resp,
-    output wire dout_TREADY_resp,
+    input wire dout_TREADY_resp,
 
     // Done signals
     output wire w_done_START,
@@ -129,88 +97,52 @@ module datapath # (
     /////////////////////////////
     // rdata
     wire [DATA_WIDTH-1:0] log_TDATA_rdata;
-    wire log_TLAST_rdata;
-    wire [DATA_WIDTH/8 -1:0] log_TKEEP_rdata;
     wire [DEST_WIDTH -1:0] log_TDEST_rdata;
-    wire [ID_WIDTH -1:0] log_TID_rdata;
     wire log_TREADY_rdata; 
     wire log_TVALID_rdata;
+
     wire inj_TVALID_rdata;
     wire inj_TREADY_rdata;
-    
     logic [DATA_WIDTH -1:0] inj_TDATA_rdata = 0; 
-    logic inj_TLAST_rdata = 0; 
-    logic [DATA_WIDTH/8 -1:0] inj_TKEEP_rdata = 0;
     logic [DEST_WIDTH -1:0] inj_TDEST_rdata = 0;
-    logic [ID_WIDTH -1:0] inj_TID_rdata = 0;
 
     // wdata
     wire [DATA_WIDTH-1:0] log_TDATA_wdata;
-    wire log_TLAST_wdata;
-    wire [DATA_WIDTH/8 -1:0] log_TKEEP_wdata;
-    wire [DEST_WIDTH -1:0] log_TDEST_wdata;
-    wire [ID_WIDTH -1:0] log_TID_wdata;
     wire log_TREADY_wdata;
     wire log_TVALID_wdata;
     wire inj_TVALID_wdata;
     wire inj_TREADY_wdata;
     
     logic [DATA_WIDTH -1:0] inj_TDATA_wdata = 0; 
-    logic inj_TLAST_wdata = 0; 
-    logic [DATA_WIDTH/8 -1:0] inj_TKEEP_wdata = 0;
-    logic [DEST_WIDTH -1:0] inj_TDEST_wdata = 0;
-    logic [ID_WIDTH -1:0] inj_TID_wdata = 0;
 
     // raddr
     wire [DATA_WIDTH-1:0] log_TDATA_raddr;
-    wire log_TLAST_raddr;
-    wire [DATA_WIDTH/8 -1:0] log_TKEEP_raddr;
-    wire [DEST_WIDTH -1:0] log_TDEST_raddr;
-    wire [ID_WIDTH -1:0] log_TID_raddr;
     wire log_TREADY_raddr;
     wire log_TVALID_raddr;
     wire inj_TVALID_raddr;
     wire inj_TREADY_raddr;
+
     
     logic [DATA_WIDTH -1:0] inj_TDATA_raddr = 0; 
-    logic inj_TLAST_raddr = 0; 
-    logic [DATA_WIDTH/8 -1:0] inj_TKEEP_raddr = 0;
-    logic [DEST_WIDTH -1:0] inj_TDEST_raddr = 0;
-    logic [ID_WIDTH -1:0] inj_TID_raddr = 0;
 
     // waddr
     wire [DATA_WIDTH-1:0] log_TDATA_awaddr;
-    wire log_TLAST_waddr;
-    wire [DATA_WIDTH/8 -1:0] log_TKEEP_awaddr;
-    wire [DEST_WIDTH -1:0] log_TDEST_awaddr;
-    wire [ID_WIDTH -1:0] log_TID_awaddr;
-    wire log_TREADY_waddr;
-    wire log_TVALID_waddr;
-    wire inj_TVALID_waddr;
-    wire inj_TREADY_waddr;
+    
+    wire log_TREADY_awaddr;
+    wire log_TVALID_awaddr;
+    wire inj_TVALID_awaddr;
+    wire inj_TREADY_awaddr;
     
     logic [DATA_WIDTH -1:0] inj_TDATA_awaddr = 0; 
-    logic inj_TLAST_waddr = 0; 
-    logic [DATA_WIDTH/8 -1:0] inj_TKEEP_awaddr = 0;
-    logic [DEST_WIDTH -1:0] inj_TDEST_awaddr = 0;
-    logic [ID_WIDTH -1:0] inj_TID_awaddr = 0;
 
     // resp
     wire [DATA_WIDTH-1:0] log_TDATA_resp;
-    wire log_TLAST_resp;
-    wire [DATA_WIDTH/8-1:0] log_TKEEP_resp;
-    wire [DEST_WIDTH -1:0] log_TDEST_resp;
-    wire [ID_WIDTH -1:0] log_TID_resp;
     wire log_TREADY_resp;
     wire log_TVALID_resp;
     wire inj_TVALID_resp;
     wire inj_TREADY_resp;
     
-    logic [DATA_WIDTH -1:0] inj_TDATA_resp = 0; 
-    logic inj_TLAST_resp = 0; 
-    logic [DATA_WIDTH/8-1:0] inj_TKEEP_resp = 0;
-    logic [DEST_WIDTH -1:0] inj_TDEST_resp = 0;
-    logic [ID_WIDTH -1:0] inj_TID_resp = 0;
+    logic [DATA_WIDTH -1:0] inj_TDATA_resp = 0;
 
     /////////////////////////////
     //assert operation signals //
@@ -250,33 +182,12 @@ module datapath # (
 
     // only inject values when this is true (!inj_failed || inj_TVALID_r == 0)
     wire [DEST_WIDTH -1:0] dout_TDEST_internal_rdata;
-    wire [ID_WIDTH -1:0] dout_TID_internal_rdata;
-
-    wire [DEST_WIDTH -1:0] dout_TDEST_internal_wdata;
-    wire [ID_WIDTH -1:0] dout_TID_internal_wdata;
-    wire [DEST_WIDTH -1:0] dout_TDEST_internal_raddr;
-    wire [ID_WIDTH -1:0] dout_TID_internal_raddr;
-    wire [DEST_WIDTH -1:0] dout_TDEST_internal_awaddr;
-    wire [ID_WIDTH -1:0] dout_TID_internal_awaddr;
-    wire [DEST_WIDTH -1:0] dout_TDEST_internal_resp;
-    wire [ID_WIDTH -1:0] dout_TID_internal_resp;
+    
     
     ///////////////////////////////////////////////////////////////////
     //Also need to treat situations when TLAST or TKEEP are not given//
     ///////////////////////////////////////////////////////////////////
     localparam KEEP_WIDTH = DATA_WIDTH/8 -1;
-    wire [KEEP_WIDTH:0] din_TKEEP_internal_rdata;
-    wire [KEEP_WIDTH:0] din_TKEEP_internal_raddr;
-    wire [KEEP_WIDTH:0] din_TKEEP_internal_wdata;
-    wire [KEEP_WIDTH:0] din_TKEEP_internal_awaddr;
-    wire [KEEP_WIDTH:0] din_TKEEP_internal_resp;
-
-    //assign din_TKEEP_internal = {KEEP_WIDTH{1'b1}};
-    wire din_TLAST_internal_rdata;
-    wire din_TLAST_internal_raddr;
-    wire din_TLAST_internal_wdata;
-    wire din_TLAST_internal_awaddr;
-    wire din_TLAST_internal_resp;
     
     /////////////////
     //reg variables//
@@ -328,37 +239,14 @@ module datapath # (
     // rdata assignments
     assign dout_TDEST_rdata = dout_TDEST_internal_rdata;
     assign inj_success_rdata = inj_TVALID_rdata && inj_TREADY_rdata; //NOTE NOT !inj_TREADY_rdata
-    assign dout_TID_rdata = dout_TID_internal_rdata;
-    assign din_TLAST_internal_rdata = din_TLAST_rdata;
-    assign din_TKEEP_internal_rdata = din_TKEEP_rdata;
 
     // wdata assignments
-    assign dout_TDEST_wdata = dout_TDEST_internal_wdata;
     assign inj_success_wdata = inj_TVALID_wdata && inj_TREADY_wdata;
-    assign dout_TID_wdata = dout_TID_internal_wdata;
-    assign din_TLAST_internal_wdata = din_TLAST_wdata;
-    assign din_TKEEP_internal_wdata = din_TKEEP_wdata;
 
-    // raddr assignments
-    assign dout_TDEST_raddr = dout_TDEST_internal_raddr;
     ////assign inj_success_raddr = inj_TVALID_raddr && !inj_TREADY_raddr; // not used
-    assign dout_TID_raddr = dout_TID_internal_raddr;
-    assign din_TLAST_internal_raddr = din_TLAST_raddr;
-    assign din_TKEEP_internal_raddr = din_TKEEP_raddr;
-
-    // awaddr assignments
-    assign dout_TDEST_awaddr = dout_TDEST_internal_awaddr;    
-    ////assign inj_success_awaddr = inj_TVALID_awaddr && !inj_TREADY_awaddr; // not used
-    assign dout_TID_awaddr = dout_TID_internal_awaddr;
-    assign din_TLAST_internal_awaddr = din_TLAST_awaddr;
-    assign din_TKEEP_internal_awaddr = din_TKEEP_awaddr;
 
     // rdata assignments
-    assign dout_TDEST_resp = dout_TDEST_internal_resp;
     assign inj_success_resp = inj_TVALID_resp && inj_TREADY_resp;
-    assign dout_TID_resp = dout_TID_internal_resp;
-    assign din_TLAST_internal_resp = din_TLAST_resp;
-    assign din_TKEEP_internal_resp = din_TKEEP_resp;
 
     // assign TREADY values (we reuse the log_TREADY register)
     assign log_TREADY_rdata = log_TREADY_r;
@@ -669,7 +557,7 @@ module datapath # (
 
     axis_governor #(
             .DATA_WIDTH(DATA_WIDTH),
-            .DEST_WIDTH(`SAFE_DEST_WIDTH),
+            .DEST_WIDTH(2),
             .ID_WIDTH(`SAFE_ID_WIDTH)
     ) guv_rdata (    
             .clk(clk),
@@ -678,37 +566,25 @@ module datapath # (
             .in_TDATA(din_TDATA_rdata),
             .in_TVALID(din_TVALID_rdata),
             .in_TREADY(din_TREADY_rdata),
-            .in_TKEEP(din_TKEEP_internal_rdata),
             .in_TDEST(din_TDEST_rdata),
-            .in_TID(din_TID_rdata),
-            .in_TLAST(din_TLAST_internal_rdata),
             
             //Inject AXI Stream. 
             .inj_TDATA(inj_TDATA_rdata),
             .inj_TVALID(inj_TVALID_rdata),
             .inj_TREADY(inj_TREADY_rdata),
-            .inj_TKEEP(inj_TKEEP_rdata),
             .inj_TDEST(inj_TDEST_rdata),
-            .inj_TID(inj_TID_rdata),
-            .inj_TLAST(inj_TLAST_rdata),
             
             //Output AXI Stream.
             .out_TDATA(dout_TDATA_rdata),
             .out_TVALID(dout_TVALID_rdata),
             .out_TREADY(dout_TREADY_rdata),
-            .out_TKEEP(dout_TKEEP_rdata),
             .out_TDEST(dout_TDEST_internal_rdata),
-            .out_TID(dout_TID_internal_rdata),
-            .out_TLAST(dout_TLAST_rdata),
             
             //Log AXI Stream. 
             .log_TDATA(log_TDATA_rdata),
             .log_TVALID(log_TVALID_rdata),
             .log_TREADY(log_TREADY_rdata),
-            .log_TKEEP(log_TKEEP_rdata),
             .log_TDEST(log_TDEST_rdata),
-            .log_TID(log_TID_rdata),
-            .log_TLAST(log_TLAST_rdata),
             
             //Control signals
             .pause(pause_rdata),
@@ -725,40 +601,24 @@ module datapath # (
             .clk(clk),
             
             //Input AXI Stream.
-            .in_TDATA(din_TDATA_wdata),
-            .in_TVALID(din_TVALID_wdata),
-            .in_TREADY(din_TREADY_wdata),
-            .in_TKEEP(din_TKEEP_internal_wdata),
-            .in_TDEST(din_TDEST_wdata),
-            .in_TID(din_TID_wdata),
-            .in_TLAST(din_TLAST_internal_wdata),
+            .in_TDATA(dout_TDATA_wdata),
+            .in_TVALID(dout_TVALID_wdata),
+            .in_TREADY(dout_TREADY_wdata),
             
             //Inject AXI Stream. 
             .inj_TDATA(inj_TDATA_wdata),
             .inj_TVALID(inj_TVALID_wdata),
             .inj_TREADY(inj_TREADY_wdata),
-            .inj_TKEEP(inj_TKEEP_wdata),
-            .inj_TDEST(inj_TDEST_wdata),
-            .inj_TID(inj_TID_wdata),
-            .inj_TLAST(inj_TLAST_wdata),
             
             //Output AXI Stream.
-            .out_TDATA(dout_TDATA_wdata),
-            .out_TVALID(dout_TVALID_wdata),
-            .out_TREADY(dout_TREADY_wdata),
-            .out_TKEEP(dout_TKEEP_wdata),
-            .out_TDEST(dout_TDEST_internal_wdata),
-            .out_TID(dout_TID_internal_wdata),
-            .out_TLAST(dout_TLAST_wdata),
+            .out_TDATA(din_TDATA_wdata),
+            .out_TVALID(din_TVALID_wdata),
+            .out_TREADY(din_TREADY_wdata),
             
             //Log AXI Stream. 
             .log_TDATA(log_TDATA_wdata),
             .log_TVALID(log_TVALID_wdata),
             .log_TREADY(log_TREADY_wdata),
-            .log_TKEEP(log_TKEEP_wdata),
-            .log_TDEST(log_TDEST_wdata),
-            .log_TID(log_TID_wdata),
-            .log_TLAST(log_TLAST_wdata),
             
             //Control signals
             .pause(pause_wdata),
@@ -774,40 +634,24 @@ module datapath # (
             .clk(clk),
             
             //Input AXI Stream.
-            .in_TDATA(din_TDATA_raddr),
-            .in_TVALID(din_TVALID_raddr),
-            .in_TREADY(din_TREADY_raddr),
-            .in_TKEEP(din_TKEEP_internal_raddr),
-            .in_TDEST(din_TDEST_raddr),
-            .in_TID(din_TID_raddr),
-            .in_TLAST(din_TLAST_internal_raddr),
+            .in_TDATA(dout_TDATA_raddr),
+            .in_TVALID(dout_TVALID_raddr),
+            .in_TREADY(dout_TREADY_raddr),
             
             //Inject AXI Stream. 
             .inj_TDATA(inj_TDATA_raddr),
             .inj_TVALID(inj_TVALID_raddr),
             .inj_TREADY(inj_TREADY_raddr),
-            .inj_TKEEP(inj_TKEEP_raddr),
-            .inj_TDEST(inj_TDEST_raddr),
-            .inj_TID(inj_TID_raddr),
-            .inj_TLAST(inj_TLAST_raddr),
             
             //Output AXI Stream.
-            .out_TDATA(dout_TDATA_raddr),
-            .out_TVALID(dout_TVALID_raddr),
-            .out_TREADY(dout_TREADY_raddr),
-            .out_TKEEP(dout_TKEEP_raddr),
-            .out_TDEST(dout_TDEST_internal_raddr),
-            .out_TID(dout_TID_internal_raddr),
-            .out_TLAST(dout_TLAST_raddr),
+            .out_TDATA(din_TDATA_raddr),
+            .out_TVALID(din_TVALID_raddr),
+            .out_TREADY(din_TREADY_raddr),
             
             //Log AXI Stream. 
             .log_TDATA(log_TDATA_raddr),
             .log_TVALID(log_TVALID_raddr),
             .log_TREADY(log_TREADY_raddr),
-            .log_TKEEP(log_TKEEP_raddr),
-            .log_TDEST(log_TDEST_raddr),
-            .log_TID(log_TID_raddr),
-            .log_TLAST(log_TLAST_raddr),
             
             //Control signals
             .pause(pause_raddr),
@@ -823,40 +667,24 @@ module datapath # (
             .clk(clk),
             
             //Input AXI Stream.
-            .in_TDATA(din_TDATA_awaddr),
-            .in_TVALID(din_TVALID_awaddr),
-            .in_TREADY(din_TREADY_awaddr),
-            .in_TKEEP(din_TKEEP_internal_awaddr),
-            .in_TDEST(din_TDEST_awaddr),
-            .in_TID(din_TID_awaddr),
-            .in_TLAST(din_TLAST_internal_awaddr),
+            .in_TDATA(dout_TDATA_awaddr),
+            .in_TVALID(dout_TVALID_awaddr),
+            .in_TREADY(dout_TREADY_awaddr),
             
             //Inject AXI Stream. 
             .inj_TDATA(inj_TDATA_awaddr),
             .inj_TVALID(inj_TVALID_awaddr),
             .inj_TREADY(inj_TREADY_awaddr),
-            .inj_TKEEP(inj_TKEEP_awaddr),
-            .inj_TDEST(inj_TDEST_awaddr),
-            .inj_TID(inj_TID_awaddr),
-            .inj_TLAST(inj_TLAST_awaddr),
             
             //Output AXI Stream.
-            .out_TDATA(dout_TDATA_awaddr),
-            .out_TVALID(dout_TVALID_awaddr),
-            .out_TREADY(dout_TREADY_awaddr),
-            .out_TKEEP(dout_TKEEP_awaddr),
-            .out_TDEST(dout_TDEST_internal_awaddr),
-            .out_TID(dout_TID_internal_awaddr),
-            .out_TLAST(dout_TLAST_awaddr),
+            .out_TDATA(din_TDATA_awaddr),
+            .out_TVALID(din_TVALID_awaddr),
+            .out_TREADY(din_TREADY_awaddr),
             
             //Log AXI Stream. 
             .log_TDATA(log_TDATA_awaddr),
             .log_TVALID(log_TVALID_awaddr),
             .log_TREADY(log_TREADY_awaddr),
-            .log_TKEEP(log_TKEEP_awaddr),
-            .log_TDEST(log_TDEST_awaddr),
-            .log_TID(log_TID_awaddr),
-            .log_TLAST(log_TLAST_awaddr),
             
             //Control signals
             .pause(pause_awaddr),
@@ -875,37 +703,21 @@ module datapath # (
             .in_TDATA(din_TDATA_resp),
             .in_TVALID(din_TVALID_resp),
             .in_TREADY(din_TREADY_resp),
-            .in_TKEEP(din_TKEEP_internal_resp),
-            .in_TDEST(din_TDEST_resp),
-            .in_TID(din_TID_resp),
-            .in_TLAST(din_TLAST_internal_resp),
-            
+
             //Inject AXI Stream. 
             .inj_TDATA(inj_TDATA_resp),
             .inj_TVALID(inj_TVALID_resp),
             .inj_TREADY(inj_TREADY_resp),
-            .inj_TKEEP(inj_TKEEP_resp),
-            .inj_TDEST(inj_TDEST_resp),
-            .inj_TID(inj_TID_resp),
-            .inj_TLAST(inj_TLAST_resp),
             
             //Output AXI Stream.
             .out_TDATA(dout_TDATA_resp),
             .out_TVALID(dout_TVALID_resp),
             .out_TREADY(dout_TREADY_resp),
-            .out_TKEEP(dout_TKEEP_resp),
-            .out_TDEST(dout_TDEST_internal_resp),
-            .out_TID(dout_TID_internal_resp),
-            .out_TLAST(dout_TLAST_resp),
             
             //Log AXI Stream. 
             .log_TDATA(log_TDATA_resp),
             .log_TVALID(log_TVALID_resp),
             .log_TREADY(log_TREADY_resp),
-            .log_TKEEP(log_TKEEP_resp),
-            .log_TDEST(log_TDEST_resp),
-            .log_TID(log_TID_resp),
-            .log_TLAST(log_TLAST_resp),
             
             //Control signals
             .pause(pause_resp),

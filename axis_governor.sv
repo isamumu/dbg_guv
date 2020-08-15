@@ -119,7 +119,7 @@ module axis_governor_glue_log (
     output wire log_vld,
     output wire inj_rdy
 );
-    
+       
     //(~inj_vld && out_rdy) means the slave is ready to receive a flit from the
     //master. OR'ing this with drop means the slave (and injector) cannot 
     //backpressure the master if drop is high.
