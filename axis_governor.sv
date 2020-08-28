@@ -32,37 +32,25 @@ module axis_governor #(
     input wire [DATA_WIDTH-1:0] in_TDATA,
     input wire in_TVALID,
     output wire in_TREADY,
-    input wire [DATA_WIDTH/8 -1:0] in_TKEEP,
     input wire [DEST_WIDTH -1:0] in_TDEST,
-    input wire [ID_WIDTH -1:0] in_TID,
-    input wire in_TLAST,
     
     //Inject AXI Stream. 
     input wire [DATA_WIDTH-1:0] inj_TDATA,
     input wire inj_TVALID,
     output wire inj_TREADY,
-    input wire [DATA_WIDTH/8 -1:0] inj_TKEEP,
     input wire [DEST_WIDTH -1:0] inj_TDEST,
-    input wire [ID_WIDTH -1:0] inj_TID,
-    input wire inj_TLAST,
     
     //Output AXI Stream.
     output wire [DATA_WIDTH-1:0] out_TDATA,
     output wire out_TVALID,
     input wire out_TREADY,
-    output wire [DATA_WIDTH/8 -1:0] out_TKEEP,
     output wire [DEST_WIDTH -1:0] out_TDEST,
-    output wire [ID_WIDTH -1:0] out_TID,
-    output wire out_TLAST,
     
     //Log AXI Stream. 
     output wire [DATA_WIDTH-1:0] log_TDATA,
     output wire log_TVALID,
     input wire log_TREADY,
-    output wire [DATA_WIDTH/8 -1:0] log_TKEEP,
     output wire [DEST_WIDTH -1:0] log_TDEST,
-    output wire [ID_WIDTH -1:0] log_TID,
-    output wire log_TLAST,
     
     //Control signals
     input wire pause,
@@ -89,16 +77,10 @@ module axis_governor #(
     
     //Connect remaining AXI Stream signals
     assign out_TDATA = inj_TVALID ? inj_TDATA : in_TDATA;
-    assign out_TKEEP = inj_TVALID ? inj_TKEEP : in_TKEEP;
     assign out_TDEST = inj_TVALID ? inj_TDEST : in_TDEST;
-    assign out_TID = inj_TVALID ? inj_TID : in_TID;
-    assign out_TLAST = inj_TVALID ? inj_TLAST : in_TLAST;
     
     assign log_TDATA = in_TDATA;
-    assign log_TKEEP = in_TKEEP;
     assign log_TDEST = in_TDEST;
-    assign log_TID = in_TID;
-    assign log_TLAST = in_TLAST;
 endmodule
 
 
@@ -119,7 +101,7 @@ module axis_governor_glue_log (
     output wire log_vld,
     output wire inj_rdy
 );
-       
+    
     //(~inj_vld && out_rdy) means the slave is ready to receive a flit from the
     //master. OR'ing this with drop means the slave (and injector) cannot 
     //backpressure the master if drop is high.

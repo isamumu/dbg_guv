@@ -1,13 +1,13 @@
 `timescale 1ns / 1ps
 
-`include "axis_governor.v"
-
 module dbg_guv # (
+
     // will move this to dbg_guv module later
     parameter DATA_WIDTH = 64,
     parameter DEST_WIDTH = 16, 
     parameter ID_WIDTH = 16
 ) (
+
     input clk,
     input rst,
     input wire [31:0] cmd_in_TDATA,
@@ -66,7 +66,11 @@ module dbg_guv # (
     //Output AXI Stream resp.
     output wire [DATA_WIDTH-1:0] dout_TDATA_resp,
     output wire dout_TVALID_resp,
-    input wire dout_TREADY_resp
+    input wire dout_TREADY_resp,
+
+    output logic [10:0] current_state,
+    output logic [10:0] next_state,
+    output logic [31:0] cmd_i
 
 );
 
@@ -81,18 +85,22 @@ module dbg_guv # (
     wire done_DONE_LOG; 
     wire done_DONE_INJECT; 
     wire done_DONE_PAUSE;
+    wire done_WAIT_NEXT;
+    wire done_UNPAUSE;
+    wire done_QUIT_DROP;
 
-    wire [9:0] curr_state;
+    wire newFlit;
+
+    wire [10:0] curr_state;
     wire master_inject_enable_resp;
     wire master_inject_enable_rdata;
-    wire master_drop_enable_rdata;
-    wire master_drop_enable_wdata;
 
     wire [9:0] state_next_o; 
 
     logic [26:0] data = 0;
-    wire [28:0] data_in_o;
 
+    wire [28:0] data_in_o;
+    assign current_state = curr_state;
 
     control_FSM U2(
         clk,
@@ -112,11 +120,17 @@ module dbg_guv # (
         done_DONE_LOG, 
         done_DONE_INJECT, 
         done_DONE_PAUSE,
+        done_WAIT_NEXT,
+        done_UNPAUSE,
+        done_QUIT_DROP,
+
         curr_state,
         master_inject_enable_resp,
         master_inject_enable_rdata,
-        master_drop_enable_rdata,
-        master_drop_enable_wdata
+        newFlit,
+        next_state,
+        cmd_i
+
     );
 
     // init module
@@ -126,8 +140,6 @@ module dbg_guv # (
         curr_state,
         master_inject_enable_resp,
         master_inject_enable_rdata,
-        master_drop_enable_rdata,
-        master_drop_enable_wdata,
 
         //Input command stream
         cmd_in_TDATA,
@@ -157,7 +169,7 @@ module dbg_guv # (
         din_TDATA_resp,
         din_TVALID_resp,
         din_TREADY_resp,
-        
+
         //Output AXI Stream rdata.
         dout_TDATA_rdata,
         dout_TDEST_rdata,
@@ -194,7 +206,12 @@ module dbg_guv # (
         done_DONE_DROP,
         done_DONE_LOG,
         done_DONE_INJECT,
-        done_DONE_PAUSE
+        done_DONE_PAUSE,
+        done_WAIT_NEXT,
+        done_UNPAUSE,
+        done_QUIT_DROP,
+        newFlit
+
     );
 
 endmodule
