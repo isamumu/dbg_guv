@@ -92,6 +92,7 @@ module datapath # (
     output logic done_WAIT_NEXT,
     output logic done_UNPAUSE,
     output logic done_QUIT_DROP,
+    output logic done_UNLOG,
 
     input wire newFlit
 
@@ -295,12 +296,13 @@ module datapath # (
     localparam LOG = 6'd4;
     localparam PAUSE = 6'd5;
     localparam DONE_DROP = 6'd6;
-    localparam DONE_LOG = 6'd7;
+    // localparam DONE_LOG = 6'd7;
     localparam DONE_INJECT = 6'd8;
     localparam DONE_PAUSE = 6'd9;     
     localparam WAIT_NEXT = 6'd10;   
     localparam UNPAUSE = 6'd11;
     localparam QUIT_DROP = 6'd12;
+    localparam UNLOG = 6'd13;
     // depend on the control path to bring us to the DONE state
  
     //////// Available functions/operations /////////////////////////////////////////
@@ -320,7 +322,7 @@ module datapath # (
 
     always @(posedge clk) begin
 
-        if(!rst) begin 
+        if(rst) begin 
 
             // rdata
             pause_enable_rdata = 0; 
@@ -356,6 +358,7 @@ module datapath # (
             done_PAUSE = 0;
             done_UNPAUSE = 0;
             done_QUIT_DROP = 0;
+            done_UNLOG = 0;
 
             done_DONE_DROP = 0;
             done_DONE_LOG = 0;
@@ -387,6 +390,7 @@ module datapath # (
             done_WAIT_NEXT = 0;
             done_UNPAUSE = 0;
             done_QUIT_DROP = 0;
+            done_UNLOG = 0;
 
             case (state_current)
 
@@ -465,7 +469,7 @@ module datapath # (
                 WAIT: begin
 
                     // wait for the handshake, only send out the done signal when we have the handshake
-
+                    /*
                     if(cmd_in_TDATA[7]) // log rdata
                         done_WAIT = log_TVALID_rdata && log_TREADY_rdata;
 
@@ -480,8 +484,8 @@ module datapath # (
                     
                     else if(cmd_in_TDATA[11])  // log resp
                         done_WAIT = log_TVALID_resp && log_TREADY_resp;
-
-                    else if(cmd_in_TDATA[5] || master_inject_enable_rdata) begin // inject or drop rdata 
+                    */
+                    if(cmd_in_TDATA[5] || master_inject_enable_rdata) begin // inject or drop rdata 
                         done_WAIT = inj_success_rdata; // && inj_success_raddr;
 
                         if(done_WAIT) begin
@@ -550,6 +554,35 @@ module datapath # (
 
                 end
 
+                UNLOG: begin
+                    if(cmd_in_TDATA[7] && cmd_in_TDATA[0]) begin
+                        log_enable_rdata = 0;
+                        log_TREADY_r = 0; 
+                    end
+
+                    else if(cmd_in_TDATA[8] && cmd_in_TDATA[0]) begin
+                        log_enable_wdata = 0;
+                        log_TREADY_r = 0;
+                    end
+
+                    else if(cmd_in_TDATA[9] && cmd_in_TDATA[0]) begin
+                        log_enable_raddr = 0;
+                        log_TREADY_r = 0;
+                    end
+
+                    else if(cmd_in_TDATA[10] && cmd_in_TDATA[0]) begin
+                        log_enable_awaddr = 0;
+                        log_TREADY_r = 0;
+                    end
+
+                    else if(cmd_in_TDATA[11] && cmd_in_TDATA[0]) begin
+                        log_enable_resp = 0;
+                        log_TREADY_r = 0;
+                    end
+
+                    done_UNLOG = 1;
+                end
+
                 PAUSE: begin
 
                     if(cmd_in_TDATA[1]) 
@@ -589,7 +622,7 @@ module datapath # (
                     done_DONE_DROP = 1;
 
                 end
-
+                /*
                 DONE_LOG: begin
 
                     log_enable_rdata = 0;
@@ -602,7 +635,7 @@ module datapath # (
                     done_DONE_LOG = 1;
 
                 end
-
+                */
                 DONE_INJECT: begin
 
                     inj_TVALID_rdata_r = 0;
@@ -610,12 +643,14 @@ module datapath # (
                     inj_TVALID_resp_r = 0;
                     inj_TVALID_awaddr_r = 0;
                     inj_TVALID_raddr_r = 0;
-
+                    
+                    /*
                     inj_TDATA_rdata = 0;
                     inj_TDATA_resp = 0;
                     inj_TDATA_wdata = 0;
                     inj_TDATA_awaddr = 0;
                     inj_TDATA_raddr = 0;
+                    */
 
                     AWADDR_cnt += 1;
                     ARADDR_cnt += 1;

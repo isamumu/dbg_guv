@@ -139,7 +139,7 @@ module dbg_guv_tb();
         rst = 1;  
         #10
         
-        
+        /*
         //VALID = 1;
         valid_wdata = 1;
         ready_wdata = 0;
@@ -165,7 +165,7 @@ module dbg_guv_tb();
         
         valid_awaddr = 1;
         ready_awaddr  = 1;
-        
+        */
         /*
         valid_rdata = 1;
         ready_rdata = 0;
@@ -206,18 +206,19 @@ module dbg_guv_tb();
         ready_awaddr  = 1;
         */
         
-        /*
-        VALID = 1;
+        
+        
         valid_rdata = 1;
         ready_rdata = 0;
         #100
         // log (will wait for a messenger sender interface)
         data_in = 26'b000000000000000000010000001;
+        doHandShake();
         #10000;
         valid_rdata = 1; //must indicate that inject was successful here
         ready_rdata = 1;
-        VALID = 0;
-        */
+       
+        
         
                 // check for pausing
         /*

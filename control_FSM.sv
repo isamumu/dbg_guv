@@ -28,6 +28,7 @@ module control_FSM(
     input wire done_WAIT_NEXT,
     input wire done_UNPAUSE,
     input wire done_QUIT_DROP,
+    input wire done_UNLOG,
 
     output wire [10:0] curr_state,
     output wire master_inject_resp,
@@ -52,6 +53,7 @@ module control_FSM(
     localparam WAIT_NEXT = 6'd10;   
     localparam UNPAUSE = 6'd11;
     localparam QUIT_DROP = 6'd12;
+    localparam UNLOG = 6'd13;
 
     logic [10:0] state_next = 0; // to be determined in the state, not reset
     logic [10:0] state = 0;
@@ -69,7 +71,7 @@ module control_FSM(
     assign newFlit = cmd_in_TREADY && cmd_in_TVALID;
     
     always@(posedge clk or posedge rst) begin 
-        if(!rst) 
+        if(rst) 
             state <= START;
         else 
             state <= state_next;
@@ -209,6 +211,15 @@ module control_FSM(
 
                 cmd_in_TREADY = 0;
 
+            end
+
+            UNLOG: begin
+                if(done_UNLOG)
+                    state_next = START;
+                else
+                    state_next = UNLOG;
+
+                cmd_in_TREADY = 0;
             end
 
             PAUSE: begin

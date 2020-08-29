@@ -88,6 +88,7 @@ module dbg_guv # (
     wire done_WAIT_NEXT;
     wire done_UNPAUSE;
     wire done_QUIT_DROP;
+    wire done_UNLOG;
 
     wire newFlit;
 
@@ -123,6 +124,7 @@ module dbg_guv # (
         done_WAIT_NEXT,
         done_UNPAUSE,
         done_QUIT_DROP,
+        done_UNLOG,
 
         curr_state,
         master_inject_enable_resp,
@@ -210,6 +212,7 @@ module dbg_guv # (
         done_WAIT_NEXT,
         done_UNPAUSE,
         done_QUIT_DROP,
+        done_UNLOG,
         newFlit
 
     );
