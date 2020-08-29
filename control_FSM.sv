@@ -57,13 +57,13 @@ module control_FSM(
 
     logic [10:0] state_next = 0; // to be determined in the state, not reset
     logic [10:0] state = 0;
-    logic [31:0] data = cmd_in_TDATA;
+    //logic [31:0] data = cmd_in_TDATA;
 
-    assign data_o = data;
+    assign data_o = cmd_in_TDATA;
     assign state_next_o = state_next;
 
     // we don't want to use this below
-    assign master_inject_resp = data[4]; // just make sure we have these
+    assign master_inject_resp = cmd_in_TDATA[4]; // just make sure we have these
     assign master_inject_rdata = 0; //data[3];
 
     // will this throw an error if state doesnt have a value?
@@ -88,25 +88,28 @@ module control_FSM(
                                    // has to be here bc, command should only update as we stall in the start state
                 if(cmd_in_TREADY && cmd_in_TVALID) begin
 
-                    if((data[1] || data[2]) && done_START)
+                    if(((cmd_in_TDATA[1] && !cmd_in_TDATA[0]) || (cmd_in_TDATA[2] && !cmd_in_TDATA[0])) && done_START)
                         state_next = PAUSE; // pause rdata // wdata
 
-                    else if(data[3] && data[0] && done_START)
+                    else if(cmd_in_TDATA[3] && cmd_in_TDATA[0] && done_START)
                         state_next = QUIT_DROP;
 
-                    else if((data[3] || data[4]) && done_START)
+                    else if((cmd_in_TDATA[3] || cmd_in_TDATA[4]) && done_START)
                         state_next = DROP; // drop rdata // wdata
 
-                    else if((data[5] || data[6]) && done_START)
+                    else if((cmd_in_TDATA[5] || cmd_in_TDATA[6]) && done_START)
                         state_next = WAIT_NEXT;// inj rdata // inj wdata
                         
-                    else if(data[12] && done_START)
+                    else if(cmd_in_TDATA[12] && done_START)
                         state_next = INJECT;  // resp
 
-                    else if((data[7] || data[8] || data[9] || data[10] || data[11]) && done_START)
+                    else if(((cmd_in_TDATA[7] && !cmd_in_TDATA[0]) || (cmd_in_TDATA[8] && !cmd_in_TDATA[0]) || (cmd_in_TDATA[9] && !cmd_in_TDATA[0]) || (cmd_in_TDATA[10] && !cmd_in_TDATA[0]) || (cmd_in_TDATA[11] && !cmd_in_TDATA[0])) && done_START)
                         state_next = LOG; // rdata // wdata // raddr // awaddr // resp
+
+                    else if(((cmd_in_TDATA[7] && cmd_in_TDATA[0]) || (cmd_in_TDATA[8] && cmd_in_TDATA[0]) || (cmd_in_TDATA[9] && cmd_in_TDATA[0]) || (cmd_in_TDATA[10] && cmd_in_TDATA[0]) || (cmd_in_TDATA[11] && cmd_in_TDATA[0])) && done_START)
+                        state_next = UNLOG; // rdata // wdata // raddr // awaddr // resp
                     
-                    else if((data[1] && data[0]) || (data[2] && data[0]) && done_START)
+                    else if((cmd_in_TDATA[1] && cmd_in_TDATA[0]) || (cmd_in_TDATA[2] && cmd_in_TDATA[0]) && done_START)
                         state_next = UNPAUSE; // unpause rdata // wdata
 
                     else
@@ -121,13 +124,13 @@ module control_FSM(
 
             DROP: begin
 
-                if(data[3] && done_DROP) 
+                if(cmd_in_TDATA[3] && done_DROP) 
                     state_next = DONE_DROP; // rdata 
 
-                else if(data[4] && done_DROP) 
+                else if(cmd_in_TDATA[4] && done_DROP) 
                     state_next = INJECT; // wdata
 
-                else if(data[6] && done_DROP)
+                else if(cmd_in_TDATA[6] && done_DROP)
                     state_next = INJECT; // inj wdata 
 
                 else
@@ -146,19 +149,19 @@ module control_FSM(
 
             INJECT: begin
                 
-                if(data[3] && done_INJECT) 
+                if(cmd_in_TDATA[3] && done_INJECT) 
                     state_next = WAIT; // for drop rdata
                     
-                else if(data[4] && done_INJECT) 
+                else if(cmd_in_TDATA[4] && done_INJECT) 
                     state_next = DROP; // for drop wdata
 
-                else if(data[5] && done_INJECT) 
+                else if(cmd_in_TDATA[5] && done_INJECT) 
                     state_next = WAIT; // for inject rdata
 
-                else if(data[6] && done_INJECT) 
+                else if(cmd_in_TDATA[6] && done_INJECT) 
                     state_next = WAIT; // for inject wdata 
 
-                else if(data[12] && done_INJECT) 
+                else if(cmd_in_TDATA[12] && done_INJECT) 
                     state_next = WAIT; // inject resp
 
                 else 
@@ -170,18 +173,19 @@ module control_FSM(
             
             WAIT: begin
 
-                if((data[3] || data[4]) && done_WAIT)
+                if((cmd_in_TDATA[3] || cmd_in_TDATA[4]) && done_WAIT)
                     state_next = DONE_DROP; // drop rdata // wdata
 
-                else if((data[5] || data[12]) && done_WAIT)
+                else if((cmd_in_TDATA[5] || cmd_in_TDATA[12]) && done_WAIT)
                     state_next = DONE_INJECT;// inj rdata // inj resp
                 
-                else if(data[6] && done_WAIT)
+                else if(cmd_in_TDATA[6] && done_WAIT)
                     state_next = DONE_INJECT; // inj wdata 
                 
-                else if((data[7] || data[8] || data[9] || data[10] || data[11]) && done_WAIT)
+                /*
+                else if((cmd_in_TDATA[7] || cmd_in_TDATA[8] || cmd_in_TDATA[9] || cmd_in_TDATA[10] || cmd_in_TDATA[11]) && done_WAIT)
                     state_next = DONE_LOG; // rdata // wdata // raddr // awaddr // resp
-
+                */
                 else
                     state_next = WAIT;
 
@@ -191,9 +195,9 @@ module control_FSM(
 
             WAIT_NEXT: begin
 
-                if(data[6] && done_WAIT_NEXT)
+                if(cmd_in_TDATA[6] && done_WAIT_NEXT)
                     state_next = DROP; // inj wdata
-                else if(data[5] && done_WAIT_NEXT)
+                else if(cmd_in_TDATA[5] && done_WAIT_NEXT)
                     state_next = INJECT; // inj rdata
                 else
                     state_next = WAIT_NEXT;
