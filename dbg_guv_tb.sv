@@ -92,7 +92,9 @@ module dbg_guv_tb();
     reg valid_araddr = 0;
     reg ready_araddr = 0;
 
-
+    logic [10:0] current_state = 0;
+    logic [10:0] next_state = 0;
+    logic [31:0] cmd_i = 0;
 
     assign din_TVALID_rdata = valid_rdata;
     assign dout_TREADY_rdata = ready_rdata;
@@ -207,7 +209,7 @@ module dbg_guv_tb();
         */
         
         
-        
+        /*
         valid_rdata = 1;
         ready_rdata = 0;
         #100
@@ -217,18 +219,18 @@ module dbg_guv_tb();
         #10000;
         valid_rdata = 1; //must indicate that inject was successful here
         ready_rdata = 1;
-       
+        */
         
         
-                // check for pausing
-        /*
+        // check for pausing
+        
         #100;
         data_in = 26'b000000000000000000000000010; // keep in mind about the cont-enable bit
         doHandShake();
         #10;
         
         #1000;
-       
+        /*
         #10;
         data_in = 26'b000000000000000000000000011; // keep in mind about the cont-enable bit
         doHandShake();
@@ -296,7 +298,11 @@ module dbg_guv_tb();
     //Output AXI Stream resp.
     dout_TDATA_resp,
     dout_TVALID_resp,
-    dout_TREADY_resp
+    dout_TREADY_resp,
+
+    current_state,
+    next_state,
+    cmd_i
 
 );
 endmodule

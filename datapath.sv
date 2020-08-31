@@ -94,7 +94,29 @@ module datapath # (
     output logic done_QUIT_DROP,
     output logic done_UNLOG,
 
-    input wire newFlit
+    input wire newFlit,
+
+    output wire [DATA_WIDTH-1:0] log_TDATA_rdata_o,
+    output wire log_TVALID_rdata_o,
+    input wire log_TREADY_rdata_i,
+    output wire [DEST_WIDTH -1:0] log_TDEST_rdata_o,
+
+    output wire [DATA_WIDTH-1:0] log_TDATA_wdata_o,
+    output wire log_TVALID_wdata_o,
+    input wire log_TREADY_wdata_i,
+
+    output wire [DATA_WIDTH-1:0] log_TDATA_raddr_o,
+    output wire log_TVALID_raddr_o,
+    input wire log_TREADY_raddr_i,
+
+    output wire [DATA_WIDTH-1:0] log_TDATA_awaddr_o,
+    output wire log_TVALID_awaddr_o,
+    input wire log_TREADY_awaddr_i,
+
+    output wire [DATA_WIDTH-1:0] log_TDATA_resp_o,
+    output wire log_TVALID_resp_o,
+    input wire log_TREADY_resp_i
+
 
 );   
 
@@ -119,7 +141,6 @@ module datapath # (
     wire log_TVALID_wdata;
     wire inj_TVALID_wdata;
     wire inj_TREADY_wdata;
-
     logic [DATA_WIDTH -1:0] inj_TDATA_wdata = 0; 
 
     // raddr
@@ -128,18 +149,14 @@ module datapath # (
     wire log_TVALID_raddr;
     wire inj_TVALID_raddr;
     wire inj_TREADY_raddr;
-    
     logic [DATA_WIDTH -1:0] inj_TDATA_raddr = 0; 
 
     // waddr
     wire [DATA_WIDTH-1:0] log_TDATA_awaddr;
-
-
     wire log_TREADY_awaddr;
     wire log_TVALID_awaddr;
     wire inj_TVALID_awaddr;
     wire inj_TREADY_awaddr;
-
     logic [DATA_WIDTH -1:0] inj_TDATA_awaddr; 
 
     // resp
@@ -148,8 +165,24 @@ module datapath # (
     wire log_TVALID_resp;
     wire inj_TVALID_resp;
     wire inj_TREADY_resp;
-
     logic [DATA_WIDTH -1:0] inj_TDATA_resp = 0;
+
+
+    assign log_TDATA_rdata_o = log_TDATA_rdata;
+    assign log_TVALID_rdata_o = 1;
+    assign log_TDEST_rdata_o = log_TDEST_rdata;
+
+    assign log_TDATA_wdata_o = log_TDATA_wdata;
+    assign log_TVALID_wdata_o = log_TVALID_wdata;
+
+    assign log_TDATA_raddr_o = log_TDATA_raddr;
+    assign log_TVALID_raddr_o = log_TVALID_raddr;
+
+    assign log_TDATA_awaddr_o = log_TDATA_awaddr;
+    assign log_TVALID_awaddr_o = log_TVALID_awaddr;
+
+    assign log_TDATA_resp_o = log_TDATA_resp;
+    assign log_TVALID_resp_o = log_TVALID_resp;
 
     /////////////////////////////
     //assert operation signals //

@@ -70,7 +70,28 @@ module dbg_guv # (
 
     output logic [10:0] current_state,
     output logic [10:0] next_state,
-    output logic [31:0] cmd_i
+    output logic [31:0] cmd_i,
+
+    output wire [DATA_WIDTH-1:0] log_TDATA_rdata_o,
+    output wire log_TVALID_rdata_o,
+    input wire log_TREADY_rdata_i,
+    output wire [DEST_WIDTH -1:0] log_TDEST_rdata_o,
+
+    output wire [DATA_WIDTH-1:0] log_TDATA_wdata_o,
+    output wire log_TVALID_wdata_o,
+    input wire log_TREADY_wdata_i,
+
+    output wire [DATA_WIDTH-1:0] log_TDATA_raddr_o,
+    output wire log_TVALID_raddr_o,
+    input wire log_TREADY_raddr_i,
+
+    output wire [DATA_WIDTH-1:0] log_TDATA_awaddr_o,
+    output wire log_TVALID_awaddr_o,
+    input wire log_TREADY_awaddr_i,
+
+    output wire [DATA_WIDTH-1:0] log_TDATA_resp_o,
+    output wire log_TVALID_resp_o,
+    input wire log_TREADY_resp_i
 
 );
 
@@ -102,6 +123,7 @@ module dbg_guv # (
 
     wire [28:0] data_in_o;
     assign current_state = curr_state;
+
 
     control_FSM U2(
         clk,
@@ -213,7 +235,28 @@ module dbg_guv # (
         done_UNPAUSE,
         done_QUIT_DROP,
         done_UNLOG,
-        newFlit
+        newFlit,
+
+        log_TDATA_rdata,
+        log_TVALID_rdata,
+        log_TREADY_rdata,
+        log_TDEST_rdata,
+
+        log_TDATA_wdata,
+        log_TVALID_wdata,
+        log_TREADY_wdata,
+
+        log_TDATA_raddr,
+        log_TVALID_raddr,
+        log_TREADY_raddr,
+
+        log_TDATA_awaddr,
+        log_TVALID_awaddr,
+        log_TREADY_awaddr,
+
+        log_TDATA_resp,
+        log_TVALID_resp,
+        log_TREADY_resp
 
     );
 
